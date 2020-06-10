@@ -1,25 +1,14 @@
----
-
-# This compose file acts as an example on using docker volumes for nagios
-# configuration. As nagios configurations are different for each site they are
-# not concidered part of the container image. The best way to deal with the
-# configurations is to store them in a volume allowing the user to upgrade the
-# image without the need to extract the site configuration from the container.
-
 version: '3'
 services:
   nagios:
-    image: jasonrivers/nagios:latest
+    build: .
+    environment:
+    - NAGIOS_TIMEZONE=Europe/Zurich
     volumes:
-    - nagiosetc:/opt/nagios/etc
-    - nagiosvar:/opt/nagios/var
-    - customplugins:/opt/Custom-Nagios-Plugins
-    - nagiosgraphvar:/opt/nagiosgraph/var
-    - nagiosgraphetc:/opt/nagiosgraph/etc
-
-volumes:
-    nagiosetc:
-    nagiosvar:
-    customplugins:
-    nagiosgraphvar:
-    nagiosgraphetc:
+    - $PWD/data/etc:/opt/nagios/etc
+    - $PWD/data/plugins:/opt/plugins
+    - $PWD/data/scripts:/opt/scripts
+#    - $PWD/data/graph:/opt/nagiosgraph/etc
+    ports:
+    - 8085:80
+    restart: unless-stopped

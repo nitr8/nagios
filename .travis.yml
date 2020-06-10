@@ -4,10 +4,8 @@ language:
   - bash
 services:
   - docker
-
 install:
-  - git clone https://github.com/JasonRivers/Docker-Nagios.git ~/Docker-Nagios
-
+  - git clone https://github.com/nitr8/nagios.git
 script:
   - ./build.sh
 

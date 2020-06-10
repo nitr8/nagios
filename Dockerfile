@@ -1,5 +1,4 @@
 FROM ubuntu:16.04
-MAINTAINER Jason Rivers <jason@jasonrivers.co.uk>
 
 ENV NAGIOS_HOME            /opt/nagios
 ENV NAGIOS_USER            nagios
@@ -17,7 +16,7 @@ ENV NG_NAGIOS_CONFIG_FILE  ${NAGIOS_HOME}/etc/nagios.cfg
 ENV NG_CGI_DIR             ${NAGIOS_HOME}/sbin
 ENV NG_WWW_DIR             ${NAGIOS_HOME}/share/nagiosgraph
 ENV NG_CGI_URL             /cgi-bin
-ENV NAGIOS_BRANCH          nagios-4.4.5
+ENV NAGIOS_BRANCH          nagios-4.4.6
 ENV NAGIOS_PLUGINS_BRANCH  release-2.2.1
 ENV NRPE_BRANCH            nrpe-3.2.1
 
@@ -79,6 +78,8 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         snmp-mibs-downloader                \
         unzip                               \
         python                              \
+        libgd-tools                         \
+        vim--tiny                           \
                                                 && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
 
@@ -241,7 +242,7 @@ RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.co
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
 EXPOSE 80
-
-VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
+VOLUME "${NAGIOS_HOME}/etc" "/opt/plugins" "/opt/scripts" "/opt/nagiosgraph/etc"
+#VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
 
 CMD [ "/usr/local/bin/start_nagios" ]
