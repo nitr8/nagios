@@ -19,76 +19,93 @@ ENV NG_CGI_URL             /cgi-bin
 ENV NAGIOS_BRANCH          nagios-4.4.6
 ENV NAGIOS_PLUGINS_BRANCH  release-2.2.1
 ENV NRPE_BRANCH            nrpe-3.2.1
+#new
+ENV POSTFIX_RELAY          [127.0.0.1]:1025
+#Environment variables to configure php
+ENV PHP_UPLOAD_MAX_FILESIZE 25M
+ENV PHP_POST_MAX_SIZE 25M
+SHELL ["/bin/bash", "-c"]
 
-
-RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections  && \
-    echo postfix postfix/mynetworks string "127.0.0.0/8" | debconf-set-selections            && \
-    echo postfix postfix/mailname string ${NAGIOS_FQDN} | debconf-set-selections             && \
-    apt-get update && apt-get install -y    \
-        apache2                             \
-        apache2-utils                       \
-        autoconf                            \
-        automake                            \
-        bc                                  \
-        bsd-mailx                           \
-        build-essential                     \
-        dnsutils                            \
-        fping                               \
-        gettext                             \
-        git                                 \
-        gperf                               \
-        iputils-ping                        \
-        jq                                  \
-        libapache2-mod-php                  \
-        libcache-memcached-perl             \
-        libcgi-pm-perl                      \
-        libdbd-mysql-perl                   \
-        libdbi-dev                          \
-        libdbi-perl                         \
-        libfreeradius-client-dev            \
-        libgd2-xpm-dev                      \
-        libgd-gd2-perl                      \
-        libjson-perl                        \
-        libldap2-dev                        \
-        libmysqlclient-dev                  \
-        libnagios-object-perl               \
-        libnagios-plugin-perl               \
-        libnet-snmp-perl                    \
-        libnet-snmp-perl                    \
-        libnet-tftp-perl                    \
-        libnet-xmpp-perl                    \
-        libpq-dev                           \
-        libredis-perl                       \
-        librrds-perl                        \
-        libssl-dev                          \
-        libswitch-perl                      \
-        libwww-perl                         \
-        m4                                  \
-        netcat                              \
-        parallel                            \
-        php-cli                             \
-        php-gd                              \
-        postfix                             \
-        python-pip                          \
-        rsyslog                             \
-        runit                               \
-        smbclient                           \
-        snmp                                \
-        snmpd                               \
-        snmp-mibs-downloader                \
-        unzip                               \
-        python                              \
-        libgd-tools                         \
-        vim--tiny                           \
-                                                && \
-    apt-get clean && rm -Rf /var/lib/apt/lists/*
+RUN \
+echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections && \
+echo postfix postfix/mynetworks string "127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128" | debconf-set-selections && \
+echo postfix postfix/destinations string "${NAGIOS_FQDN}, localhost.localdomain, localhost" | debconf-set-selections && \
+echo postfix postfix/mailname string ${NAGIOS_FQDN} | debconf-set-selections && \
+echo postfix postfix/relayhost string ${POSTFIX_RELAY} | debconf-set-selections && \
+apt-get update -y -qq > /dev/null && \
+apt-get install -y -qq apt-utils 2> >( grep -v 'debconf: delaying package configuration, since apt-utils is not installed' >&2 ) > /dev/null && \
+apt-get install -y -qq --no-install-recommends \
+#apt-get install -y -qq \
+apache2 \
+apache2-utils \
+autoconf \
+automake \
+bc \
+bsd-mailx \
+build-essential \
+dnsutils \
+fping \
+gettext \
+git \
+gperf \
+iputils-ping \
+jq \
+libapache2-mod-php \
+libcache-memcached-perl \
+libcgi-pm-perl \
+libdbd-mysql-perl \
+libdbi-dev \
+libdbi-perl \
+libfreeradius-client-dev \
+libgd2-xpm-dev \
+libgd-gd2-perl \
+libjson-perl \
+libldap2-dev \
+libmysqlclient-dev \
+libnagios-object-perl \
+libnagios-plugin-perl \
+libnet-snmp-perl \
+libnet-snmp-perl \
+libnet-tftp-perl \
+libnet-xmpp-perl \
+libpq-dev \
+libredis-perl \
+librrds-perl \
+libssl-dev \
+libswitch-perl \
+libwww-perl \
+m4 \
+netcat \
+parallel \
+php-cli \
+php-gd \
+postfix \
+python-pip \
+rsyslog \
+runit \
+smbclient \
+snmp \
+snmpd \
+snmp-mibs-downloader \
+unzip \
+python \
+libgd-tools \
+vim-tiny \
+openssh-server \
+golang-go \
+samba \
+mailutils \
+software-properties-common \
+&& \
+apt-get clean && rm -Rf /var/lib/apt/lists/*
 
 RUN ( egrep -i "^${NAGIOS_GROUP}"    /etc/group || groupadd $NAGIOS_GROUP    )                         && \
     ( egrep -i "^${NAGIOS_CMDGROUP}" /etc/group || groupadd $NAGIOS_CMDGROUP )
 RUN ( id -u $NAGIOS_USER    || useradd --system -d $NAGIOS_HOME -g $NAGIOS_GROUP    $NAGIOS_USER    )  && \
-    ( id -u $NAGIOS_CMDUSER || useradd --system -d $NAGIOS_HOME -g $NAGIOS_CMDGROUP $NAGIOS_CMDUSER )
-
-RUN cd /tmp                                           && \
+    ( id -u $NAGIOS_CMDUSER || useradd --system -d $NAGIOS_HOME -g $NAGIOS_CMDGROUP $NAGIOS_CMDUSER ) && \
+echo "Building qstat" && \
+cd /tmp && \
+#RUN cd /tmp                                           && \
     git clone https://github.com/multiplay/qstat.git  && \
     cd qstat                                          && \
     ./autogen.sh                                      && \
@@ -206,7 +223,6 @@ ADD overlay /
 RUN echo "use_timezone=${NAGIOS_TIMEZONE}" >> ${NAGIOS_HOME}/etc/nagios.cfg
 
 # Copy example config in-case the user has started with empty var or etc
-
 RUN mkdir -p /orig/var && mkdir -p /orig/etc  && \
     cp -Rp ${NAGIOS_HOME}/var/* /orig/var/       && \
     cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/
@@ -218,14 +234,15 @@ RUN a2enmod session         && \
     a2enmod request
 
 RUN chmod +x /usr/local/bin/start_nagios        && \
-    chmod +x /etc/sv/apache/run                 && \
-    chmod +x /etc/sv/nagios/run                 && \
-    chmod +x /etc/sv/postfix/run                 && \
-    chmod +x /etc/sv/rsyslog/run                 && \
+    chmod +x /etc/sv/*/run                      && \
     chmod +x /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
 
 RUN cd /opt/nagiosgraph/etc && \
     sh fix-nagiosgraph-multiple-selection.sh
+
+RUN mkdir -p /orig/graph/var && mkdir -p /orig/graph/etc && \
+    cp -Rp /opt/nagiosgraph/var/* /orig/var/ && \
+    cp -Rp /opt/nagiosgraph/etc/* /orig/etc/
 
 RUN rm /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
 
@@ -236,12 +253,37 @@ ENV APACHE_LOCK_DIR /var/run
 ENV APACHE_LOG_DIR /var/log/apache2
 
 #Set ServerName and timezone for Apache
-RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.conf    && \
-    echo "PassEnv TZ" > /etc/apache2/conf-available/timezone.conf            && \
-    ln -s /etc/apache2/conf-available/servername.conf /etc/apache2/conf-enabled/servername.conf    && \
+RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.conf              && \
+    echo "PassEnv TZ" > /etc/apache2/conf-available/timezone.conf                               && \
+    ln -s /etc/apache2/conf-available/servername.conf /etc/apache2/conf-enabled/servername.conf && \
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
-EXPOSE 80
+# SSH login fix
+RUN mkdir /var/run/sshd
+RUN echo 'root:${NAGIOSADMIN_PASS}' | chpasswd
+#RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/Port 22/Port 1022/' /etc/ssh/sshd_config
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+RUN echo "export VISIBLE=now" >> /etc/profile
+
+RUN \
+echo "export GOPATH=/opt/.go" >> ~/.profile  && \
+source ~/.profile && \
+go get github.com/mailhog/MailHog && \
+go get github.com/mailhog/mhsendmail && \
+cp /opt/.go/bin/MailHog /bin/mailhog  && \
+cp /opt/.go/bin/mhsendmail /bin/mhsendmail
+
+EXPOSE  80 \
+        8025 \
+        1025 \
+        22 \
+        137/udp \
+        138/udp \
+        139/tcp \
+        445/tcp
+
 VOLUME "${NAGIOS_HOME}/etc" "/opt/plugins" "/opt/scripts" "/opt/nagiosgraph/etc"
 #VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
 

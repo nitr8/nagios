@@ -1,7 +1,5 @@
 #!/bin/bash
 # Author: Tomasz Matejunas
-# Email: tm@digitaloak.it
-# Website: digitaloak.it
 
 # Description
 # Script fixes problem with not working multiple selection for nagiosgraph datasets and periods.

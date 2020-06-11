@@ -67,7 +67,11 @@ docker-compose -f x_dev_jr_compose.yml up
 
 docker build -t nagios .
 docker-compose up
-docker run --name nagios -v $PWD/data/etc:/opt/nagios/etc -p 8080:80 whumphrey/nagios
+docker run --name nagios -v $PWD/data/etc:/opt/nagios/etc -p 8080:80 nagios
+
+docker build -t nagios:dev .
+docker-compose -f dev_compose.yml up
+docker run --name nagios -v $PWD/data/etc:/opt/nagios/etc -p 8080:80 nagios:dev
 ```
 
 ## Creds

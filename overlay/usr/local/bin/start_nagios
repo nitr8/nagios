@@ -19,6 +19,12 @@ if [ ! -f "${NAGIOS_HOME}/etc/htpasswd.users" ] ; then
   chown -R ${NAGIOS_USER}.${NAGIOS_GROUP} "${NAGIOS_HOME}/etc/htpasswd.users"
 fi
 
+echo "=> Setting PHP upload_max_filesize to ${PHP_UPLOAD_MAX_FILESIZE}"
+echo "=> Setting PHP post_max_size to ${PHP_POST_MAX_SIZE}"
+sed -ri -e "s/^upload_max_filesize.*/upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}/" \
+    -e "s/^;sendmail_path.*/sendmail_path = \\/bin\\/mhsendmail/" \
+    -e "s/^post_max_size.*/post_max_size = ${PHP_POST_MAX_SIZE}/" /etc/php/7.0/apache2/php.ini
+
 shutdown() {
   echo Shutting Down
   ls /etc/service | SHELL=/bin/sh parallel --no-notice sv force-stop {}

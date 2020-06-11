@@ -1,0 +1,23 @@
+version: '3'
+services:
+  nagios_dev:
+    image: nagios:dev
+    environment:
+    - NAGIOS_FQDN=monitoring.local
+    - MAIL_RELAY_HOST=[127.0.0.1]:1025
+    - NAGIOS_TIMEZONE=Europe/Zurich
+    - PHP_UPLOAD_MAX_FILESIZE=25M
+    - PHP_POST_MAX_SIZE=25M
+    volumes:
+    - $PWD/x_dev_data/etc:/opt/nagios/etc
+    - $PWD/x_dev_data/plugins:/opt/plugins
+    - $PWD/x_dev_data/scripts:/opt/scripts
+    ports:
+    - 1022:22
+    - 8087:80
+    - 8025:8025
+    - 1025:1025
+    - 137:137
+    - 138:138
+    - 139:139
+    - 445:445
