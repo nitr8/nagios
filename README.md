@@ -74,6 +74,6 @@ docker-compose -f dev_compose.yml up
 docker run --name nagios -v $PWD/data/etc:/opt/nagios/etc -p 8080:80 nagios:dev
 ```
 
-## Creds
+## Credits
 
 * Jason Rivers [<https://github.com/JasonRivers/Docker-Nagios>]

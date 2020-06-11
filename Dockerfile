@@ -221,7 +221,6 @@ ADD overlay /
 
 RUN \
 echo "use_timezone=${NAGIOS_TIMEZONE}" >> ${NAGIOS_HOME}/etc/nagios.cfg && \
-RUN \
 mkdir -p /orig/var && mkdir -p /orig/etc && \
 cp -Rp ${NAGIOS_HOME}/var/* /orig/var/ && \
 cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/ && \
