@@ -12,12 +12,9 @@ services:
     - $PWD/x_dev_data/etc:/opt/nagios/etc
     - $PWD/x_dev_data/plugins:/opt/plugins
     - $PWD/x_dev_data/scripts:/opt/scripts
+    - $PWD/x_dev_data/graph/etc:/opt/nagiosgraph/etc
     ports:
-    - 1022:22
     - 8087:80
     - 8025:8025
     - 1025:1025
-    - 137:137
-    - 138:138
-    - 139:139
-    - 445:445
+    - 1022:22

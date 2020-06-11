@@ -8,7 +8,10 @@ services:
     - $PWD/data/etc:/opt/nagios/etc
     - $PWD/data/plugins:/opt/plugins
     - $PWD/data/scripts:/opt/scripts
-#    - $PWD/data/graph:/opt/nagiosgraph/etc
+    - $PWD/data/graph:/opt/nagiosgraph/etc
     ports:
     - 8085:80
+    - 8025:8025
+    - 1025:1025
+    - 137:22
     restart: unless-stopped

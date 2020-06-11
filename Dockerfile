@@ -93,8 +93,6 @@ libgd-tools \
 vim-tiny \
 openssh-server \
 golang-go \
-samba \
-mailutils \
 software-properties-common \
 && \
 apt-get clean && rm -Rf /var/lib/apt/lists/*
@@ -105,146 +103,146 @@ RUN ( id -u $NAGIOS_USER    || useradd --system -d $NAGIOS_HOME -g $NAGIOS_GROUP
     ( id -u $NAGIOS_CMDUSER || useradd --system -d $NAGIOS_HOME -g $NAGIOS_CMDGROUP $NAGIOS_CMDUSER ) && \
 echo "Building qstat" && \
 cd /tmp && \
-#RUN cd /tmp                                           && \
-    git clone https://github.com/multiplay/qstat.git  && \
-    cd qstat                                          && \
-    ./autogen.sh                                      && \
-    ./configure                                       && \
-    make                                              && \
-    make install                                      && \
-    make clean                                        && \
-    cd /tmp && rm -Rf qstat
+git clone https://github.com/multiplay/qstat.git && \
+cd qstat && \
+./autogen.sh && \
+./configure && \
+make && \
+make install && \
+make clean && \
+cd /tmp && rm -Rf qstat
 
-RUN cd /tmp                                                                          && \
-    git clone https://github.com/NagiosEnterprises/nagioscore.git -b $NAGIOS_BRANCH  && \
-    cd nagioscore                                                                    && \
-    ./configure                                  \
-        --prefix=${NAGIOS_HOME}                  \
-        --exec-prefix=${NAGIOS_HOME}             \
-        --enable-event-broker                    \
-        --with-command-user=${NAGIOS_CMDUSER}    \
-        --with-command-group=${NAGIOS_CMDGROUP}  \
-        --with-nagios-user=${NAGIOS_USER}        \
-        --with-nagios-group=${NAGIOS_GROUP}      \
-                                                                                     && \
-    make all                                                                         && \
-    make install                                                                     && \
-    make install-config                                                              && \
-    make install-commandmode                                                         && \
-    make install-webconf                                                             && \
-    make clean                                                                       && \
-    cd /tmp && rm -Rf nagioscore
+RUN \
+cd /tmp && \
+git clone https://github.com/NagiosEnterprises/nagioscore.git -b $NAGIOS_BRANCH && \
+cd nagioscore && \
+./configure \
+--prefix=${NAGIOS_HOME} \
+--exec-prefix=${NAGIOS_HOME} \
+--enable-event-broker \
+--with-command-user=${NAGIOS_CMDUSER} \
+--with-command-group=${NAGIOS_CMDGROUP} \
+--with-nagios-user=${NAGIOS_USER} \
+--with-nagios-group=${NAGIOS_GROUP} \
+&& \
+make all && \
+make install && \
+make install-config && \
+make install-commandmode && \
+make install-webconf && \
+make clean && \
+cd /tmp && rm -Rf nagioscore
 
-RUN cd /tmp                                                                                   && \
-    git clone https://github.com/nagios-plugins/nagios-plugins.git -b $NAGIOS_PLUGINS_BRANCH  && \
-    cd nagios-plugins                                                                         && \
-    ./tools/setup                                                                             && \
-    ./configure                                                 \
-        --prefix=${NAGIOS_HOME}                                 \
-        --with-ipv6                                             \
-        --with-ping6-command="/bin/ping6 -n -U -W %d -c %d %s"  \
-                                                                                              && \
-    make                                                                                      && \
-    make install                                                                              && \
-    make clean                                                                                && \
-    mkdir -p /usr/lib/nagios/plugins                                                          && \
-    ln -sf ${NAGIOS_HOME}/libexec/utils.pm /usr/lib/nagios/plugins                            && \
-    cd /tmp && rm -Rf nagios-plugins
+RUN \
+cd /tmp && \
+git clone https://github.com/nagios-plugins/nagios-plugins.git -b $NAGIOS_PLUGINS_BRANCH && \
+cd nagios-plugins && \
+./tools/setup && \
+./configure \
+--prefix=${NAGIOS_HOME} \
+--with-ipv6 \
+--with-ping6-command="/bin/ping6 -n -U -W %d -c %d %s" \
+&& \
+make && \
+make install && \
+make clean && \
+mkdir -p /usr/lib/nagios/plugins && \
+ln -sf ${NAGIOS_HOME}/libexec/utils.pm /usr/lib/nagios/plugins && \
+cd /tmp && rm -Rf nagios-plugins
 
-RUN wget -O ${NAGIOS_HOME}/libexec/check_ncpa.py https://raw.githubusercontent.com/NagiosEnterprises/ncpa/v2.0.5/client/check_ncpa.py  && \
-    chmod +x ${NAGIOS_HOME}/libexec/check_ncpa.py
+RUN \
+wget -O ${NAGIOS_HOME}/libexec/check_ncpa.py https://raw.githubusercontent.com/NagiosEnterprises/ncpa/v2.0.5/client/check_ncpa.py && \
+chmod +x ${NAGIOS_HOME}/libexec/check_ncpa.py
 
-RUN cd /tmp                                                                  && \
-    git clone https://github.com/NagiosEnterprises/nrpe.git -b $NRPE_BRANCH  && \
-    cd nrpe                                                                  && \
-    ./configure                                   \
-        --with-ssl=/usr/bin/openssl               \
-        --with-ssl-lib=/usr/lib/x86_64-linux-gnu  \
-                                                                             && \
-    make check_nrpe                                                          && \
-    cp src/check_nrpe ${NAGIOS_HOME}/libexec/                                && \
-    make clean                                                               && \
-    cd /tmp && rm -Rf nrpe
+RUN \
+cd /tmp && \
+git clone https://github.com/NagiosEnterprises/nrpe.git -b $NRPE_BRANCH && \
+cd nrpe && \
+./configure \
+--with-ssl=/usr/bin/openssl \
+--with-ssl-lib=/usr/lib/x86_64-linux-gnu \
+&& \
+make check_nrpe && \
+cp src/check_nrpe ${NAGIOS_HOME}/libexec/ && \
+make clean && \
+cd /tmp && rm -Rf nrpe
 
-RUN cd /tmp                                                          && \
-    git clone https://git.code.sf.net/p/nagiosgraph/git nagiosgraph  && \
-    cd nagiosgraph                                                   && \
-    ./install.pl --install                                      \
-        --prefix /opt/nagiosgraph                               \
-        --nagios-user ${NAGIOS_USER}                            \
-        --www-user ${NAGIOS_USER}                               \
-        --nagios-perfdata-file ${NAGIOS_HOME}/var/perfdata.log  \
-        --nagios-cgi-url /cgi-bin                               \
-                                                                     && \
-    cp share/nagiosgraph.ssi ${NAGIOS_HOME}/share/ssi/common-header.ssi && \
-    cd /tmp && rm -Rf nagiosgraph
+RUN \
+cd /tmp && \
+git clone https://git.code.sf.net/p/nagiosgraph/git nagiosgraph && \
+cd nagiosgraph && \
+./install.pl --install \
+--prefix /opt/nagiosgraph \
+--nagios-user ${NAGIOS_USER} \
+--www-user ${NAGIOS_USER} \
+--nagios-perfdata-file ${NAGIOS_HOME}/var/perfdata.log \
+--nagios-cgi-url /cgi-bin \
+&& \
+cp share/nagiosgraph.ssi ${NAGIOS_HOME}/share/ssi/common-header.ssi && \
+cd /tmp && rm -Rf nagiosgraph
 
-RUN cd /opt                                                                         && \
-    pip install pymssql                                                             && \
-    git clone https://github.com/willixix/naglio-plugins.git     WL-Nagios-Plugins  && \
-    git clone https://github.com/JasonRivers/nagios-plugins.git  JR-Nagios-Plugins  && \
-    git clone https://github.com/justintime/nagios-plugins.git   JE-Nagios-Plugins  && \
-    git clone https://github.com/nagiosenterprises/check_mssql_collection.git   nagios-mssql  && \
-    chmod +x /opt/WL-Nagios-Plugins/check*                                          && \
-    chmod +x /opt/JE-Nagios-Plugins/check_mem/check_mem.pl                          && \
-    cp /opt/JE-Nagios-Plugins/check_mem/check_mem.pl ${NAGIOS_HOME}/libexec/           && \
-    cp /opt/nagios-mssql/check_mssql_database.py ${NAGIOS_HOME}/libexec/                         && \
-    cp /opt/nagios-mssql/check_mssql_server.py ${NAGIOS_HOME}/libexec/
+RUN \
+cd /opt && \
+pip install pymssql && \
+git clone https://github.com/willixix/naglio-plugins.git WL-Nagios-Plugins && \
+git clone https://github.com/JasonRivers/nagios-plugins.git JR-Nagios-Plugins && \
+git clone https://github.com/justintime/nagios-plugins.git JE-Nagios-Plugins && \
+git clone https://github.com/nagiosenterprises/check_mssql_collection.git nagios-mssql  && \
+chmod +x /opt/WL-Nagios-Plugins/check* && \
+chmod +x /opt/JE-Nagios-Plugins/check_mem/check_mem.pl && \
+cp /opt/JE-Nagios-Plugins/check_mem/check_mem.pl ${NAGIOS_HOME}/libexec/ && \
+cp /opt/nagios-mssql/check_mssql_database.py ${NAGIOS_HOME}/libexec/ && \
+cp /opt/nagios-mssql/check_mssql_server.py ${NAGIOS_HOME}/libexec/
 
+RUN \
+sed -i.bak 's/.*\=www\-data//g' /etc/apache2/envvars && \
+export DOC_ROOT="DocumentRoot $(echo $NAGIOS_HOME/share)" && \
+sed -i "s,DocumentRoot.*,$DOC_ROOT," /etc/apache2/sites-enabled/000-default.conf && \
+sed -i "s,</VirtualHost>,<IfDefine ENABLE_USR_LIB_CGI_BIN>\nScriptAlias /cgi-bin/ ${NAGIOS_HOME}/sbin/\n</IfDefine>\n</VirtualHost>," /etc/apache2/sites-enabled/000-default.conf  && \
+ln -s /etc/apache2/mods-available/cgi.load /etc/apache2/mods-enabled/cgi.load && \
+mkdir -p -m 0755 /usr/share/snmp/mibs && \
+mkdir -p ${NAGIOS_HOME}/etc/conf.d && \
+mkdir -p ${NAGIOS_HOME}/etc/monitor && \
+mkdir -p -m 700  ${NAGIOS_HOME}/.ssh && \
+chown ${NAGIOS_USER}:${NAGIOS_GROUP} ${NAGIOS_HOME}/.ssh && \
+touch /usr/share/snmp/mibs/.foo && \
+ln -s /usr/share/snmp/mibs ${NAGIOS_HOME}/libexec/mibs && \
+ln -s ${NAGIOS_HOME}/bin/nagios /usr/local/bin/nagios && \
+download-mibs && echo "mibs +ALL" > /etc/snmp/snmp.conf && \
+cp /etc/services /var/spool/postfix/etc/  && \
+echo "smtp_address_preference = ipv4" >> /etc/postfix/main.cf && \
+rm -rf /etc/rsyslog.d /etc/rsyslog.conf && \
+rm -rf /etc/sv/getty-5
 
-RUN sed -i.bak 's/.*\=www\-data//g' /etc/apache2/envvars
-RUN export DOC_ROOT="DocumentRoot $(echo $NAGIOS_HOME/share)"                         && \
-    sed -i "s,DocumentRoot.*,$DOC_ROOT," /etc/apache2/sites-enabled/000-default.conf  && \
-    sed -i "s,</VirtualHost>,<IfDefine ENABLE_USR_LIB_CGI_BIN>\nScriptAlias /cgi-bin/ ${NAGIOS_HOME}/sbin/\n</IfDefine>\n</VirtualHost>," /etc/apache2/sites-enabled/000-default.conf  && \
-    ln -s /etc/apache2/mods-available/cgi.load /etc/apache2/mods-enabled/cgi.load
-
-RUN mkdir -p -m 0755 /usr/share/snmp/mibs                     && \
-    mkdir -p         ${NAGIOS_HOME}/etc/conf.d                && \
-    mkdir -p         ${NAGIOS_HOME}/etc/monitor               && \
-    mkdir -p -m 700  ${NAGIOS_HOME}/.ssh                      && \
-    chown ${NAGIOS_USER}:${NAGIOS_GROUP} ${NAGIOS_HOME}/.ssh  && \
-    touch /usr/share/snmp/mibs/.foo                           && \
-    ln -s /usr/share/snmp/mibs ${NAGIOS_HOME}/libexec/mibs    && \
-    ln -s ${NAGIOS_HOME}/bin/nagios /usr/local/bin/nagios     && \
-    download-mibs && echo "mibs +ALL" > /etc/snmp/snmp.conf
-
-RUN sed -i 's,/bin/mail,/usr/bin/mail,' ${NAGIOS_HOME}/etc/objects/commands.cfg  && \
-    sed -i 's,/usr/usr,/usr,'           ${NAGIOS_HOME}/etc/objects/commands.cfg
-
-RUN cp /etc/services /var/spool/postfix/etc/  && \
-    echo "smtp_address_preference = ipv4" >> /etc/postfix/main.cf
-
-RUN rm -rf /etc/rsyslog.d /etc/rsyslog.conf
-
-RUN rm -rf /etc/sv/getty-5
+#RUN sed -i 's,/bin/mail,/usr/bin/mail,' ${NAGIOS_HOME}/etc/objects/commands.cfg  && \
+#    sed -i 's,/usr/usr,/usr,'           ${NAGIOS_HOME}/etc/objects/commands.cfg
 
 ADD overlay /
 
-RUN echo "use_timezone=${NAGIOS_TIMEZONE}" >> ${NAGIOS_HOME}/etc/nagios.cfg
+RUN \
+echo "use_timezone=${NAGIOS_TIMEZONE}" >> ${NAGIOS_HOME}/etc/nagios.cfg && \
+RUN \
+mkdir -p /orig/var && mkdir -p /orig/etc && \
+cp -Rp ${NAGIOS_HOME}/var/* /orig/var/ && \
+cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/ && \
+mkdir -p /orig/graph/xXx && \
+cp -Rp /opt/nagiosgraph/var/ /orig/graph/ && \
+cp -Rp /opt/nagiosgraph/etc/ /orig/graph/
 
-# Copy example config in-case the user has started with empty var or etc
-RUN mkdir -p /orig/var && mkdir -p /orig/etc  && \
-    cp -Rp ${NAGIOS_HOME}/var/* /orig/var/       && \
-    cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/
+RUN \
+a2enmod session && \
+a2enmod session_cookie && \
+a2enmod session_crypto && \
+a2enmod auth_form && \
+a2enmod request
 
-RUN a2enmod session         && \
-    a2enmod session_cookie  && \
-    a2enmod session_crypto  && \
-    a2enmod auth_form       && \
-    a2enmod request
-
-RUN chmod +x /usr/local/bin/start_nagios        && \
-    chmod +x /etc/sv/*/run                      && \
-    chmod +x /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
-
-RUN cd /opt/nagiosgraph/etc && \
-    sh fix-nagiosgraph-multiple-selection.sh
-
-RUN mkdir -p /orig/graph/var && mkdir -p /orig/graph/etc && \
-    cp -Rp /opt/nagiosgraph/var/* /orig/var/ && \
-    cp -Rp /opt/nagiosgraph/etc/* /orig/etc/
-
-RUN rm /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
+RUN \
+chmod +x /usr/local/bin/start_nagios && \
+chmod +x /etc/sv/*/run && \
+chmod +x /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh && \
+cd /opt/nagiosgraph/etc && \
+sh fix-nagiosgraph-multiple-selection.sh && \
+rm /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
 
 # enable all runit services
 RUN ln -s /etc/sv/* /etc/service
@@ -259,16 +257,17 @@ RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.co
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
 # SSH login fix
-RUN mkdir /var/run/sshd
-RUN echo 'root:${NAGIOSADMIN_PASS}' | chpasswd
-#RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN sed -i 's/Port 22/Port 1022/' /etc/ssh/sshd_config
-RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-RUN echo "export VISIBLE=now" >> /etc/profile
+RUN \
+mkdir /var/run/sshd && \
+echo 'root:${NAGIOSADMIN_PASS}' | chpasswd  && \
+#sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+sed -i 's/Port 22/Port 1022/' /etc/ssh/sshd_config && \
+sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && \
+echo "export VISIBLE=now" >> /etc/profile
 
 RUN \
-echo "export GOPATH=/opt/.go" >> ~/.profile  && \
+echo "export GOPATH=/opt/.go" >> ~/.profile && \
 source ~/.profile && \
 go get github.com/mailhog/MailHog && \
 go get github.com/mailhog/mhsendmail && \
@@ -278,13 +277,8 @@ cp /opt/.go/bin/mhsendmail /bin/mhsendmail
 EXPOSE  80 \
         8025 \
         1025 \
-        22 \
-        137/udp \
-        138/udp \
-        139/tcp \
-        445/tcp
+        22
 
 VOLUME "${NAGIOS_HOME}/etc" "/opt/plugins" "/opt/scripts" "/opt/nagiosgraph/etc"
-#VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
 
 CMD [ "/usr/local/bin/start_nagios" ]
