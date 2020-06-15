@@ -9,12 +9,10 @@ services:
     - PHP_UPLOAD_MAX_FILESIZE=25M
     - PHP_POST_MAX_SIZE=25M
     volumes:
-    - $PWD/x_dev_data/etc:/opt/nagios/etc
-    - $PWD/x_dev_data/plugins:/opt/plugins
-    - $PWD/x_dev_data/scripts:/opt/scripts
-    - $PWD/x_dev_data/graph/etc:/opt/nagiosgraph/etc
+    - $PWD/dev_data/etc:/opt/nagios/etc
+#    - $PWD/dev_data/var:/opt/nagios/var
+    - $PWD/dev_data/plugins:/opt/plugins
+    - $PWD/dev_data/scripts:/opt/scripts
     ports:
-    - 8087:80
-    - 8025:8025
-    - 1025:1025
-    - 1022:22
+    - 8086:80
+    - 8026:8025

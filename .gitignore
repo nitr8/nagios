@@ -1,3 +1,6 @@
 **/.DS_Store
 data/**
 x_dev**
+dev_data/**
+dev_compose.yml
+dev_compose.yml
